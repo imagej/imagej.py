@@ -32,6 +32,7 @@ import logging
 import os
 import re
 import sys
+import time
 
 import imglyb
 import numpy as np
@@ -174,6 +175,7 @@ def init(ij_dir_or_version_or_endpoint=None, headless=True):
     RandomAccessibleInterval = sj.jimport('net.imglib2.RandomAccessibleInterval')
     Axes                     = sj.jimport('net.imagej.axis.Axes')
     Double                   = sj.jimport('java.lang.Double')
+    Images                   = sj.jimport('net.imagej.util.Images')
 
     # EnumeratedAxis is a new axis made for xarray, so is only present in
     # ImageJ versions that are released later than March 2020. This check
@@ -305,8 +307,20 @@ def init(ij_dir_or_version_or_endpoint=None, headless=True):
             """
             Convert a RandomAccessibleInterval into a numpy array
             """
+            rai_to_numpy_start = time.process_time()
             result = self.new_numpy_image(rai)
             self._ij.op().run("copy.rai", self.to_java(result), rai)
+            print("Elapsed cpu time: {}".format(time.process_time() - rai_to_numpy_start))
+            return result
+
+        def new_rai_to_numpy(self, rai):
+            """
+            Convert a RandomAccessibleInterval into a numpy array
+            """
+            new_rai_to_numpy_start = time.process_time()
+            result = self.new_numpy_image(rai)
+            Images.copy(rai, self.to_java(result))
+            print("Elapsed cpu time: {}".format(time.process_time() - new_rai_to_numpy_start))
             return result
 
         def run_plugin(self, plugin, args=None, ij1_style=True):
